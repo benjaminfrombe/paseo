@@ -71,6 +71,7 @@ export function useReviewFeedback(input: {
           const activeTurnBehavior = sendBehavior === "steer" ? "steer" : "interrupt";
           await dispatchComposerAgentMessage({
             client: targetClient,
+            serverId,
             agentId: recipient.agentId,
             text: i18n.t("review.feedback.prompt"),
             attachments: [attachment],
