@@ -791,7 +791,12 @@ function mergeMutableDaemonPatch(
   if (patch.terminalProfiles !== undefined) next.terminalProfiles = patch.terminalProfiles;
   if (patch.agentProfiles !== undefined) next.agentProfiles = patch.agentProfiles;
   if (patch.planAcceptModeDefaults !== undefined) {
-    next.planAcceptModeDefaults = patch.planAcceptModeDefaults;
+    // Keyed by provider, unlike the list fields above: merge so a client patching
+    // one provider's default can't clobber another provider's concurrently-saved one.
+    next.planAcceptModeDefaults = {
+      ...next.planAcceptModeDefaults,
+      ...patch.planAcceptModeDefaults,
+    };
   }
   return Object.keys(next).length > 0 ? next : undefined;
 }

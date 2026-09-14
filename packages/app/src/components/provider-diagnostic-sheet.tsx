@@ -673,11 +673,12 @@ export function ProviderDiagnosticSheet({
   );
   const handleSelectPlanAcceptMode = useCallback(
     (modeId: string) => {
-      void patchConfig({
-        planAcceptModeDefaults: { ...config?.planAcceptModeDefaults, [provider]: modeId },
-      });
+      // Send only this provider's key — the daemon merges it into whatever's
+      // currently persisted, so a stale local snapshot of other providers'
+      // defaults can't clobber a concurrent update from another client.
+      void patchConfig({ planAcceptModeDefaults: { [provider]: modeId } });
     },
-    [config?.planAcceptModeDefaults, patchConfig, provider],
+    [patchConfig, provider],
   );
   const providerSnapshotRefreshing = providerEntry?.status === "loading";
   const providerErrorMessage =

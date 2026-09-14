@@ -371,15 +371,16 @@ export function useAgentFormState(options: UseAgentFormStateOptions): UseAgentFo
   );
 
   const { profiles } = useAgentProfiles(serverId);
-  const defaultProfileAppliedRef = useRef(false);
 
   useEffect(() => {
-    if (defaultProfileAppliedRef.current) return;
     if (!isCreateFlow || resolution.status !== "completed" || profiles === null) return;
-    defaultProfileAppliedRef.current = true;
     // A seeded draft (fork/handoff) or a user pick made while profiles were still
     // loading both carry more intent than "brand new, nothing chosen yet" — the
-    // default profile must not clobber either.
+    // default profile must not clobber either. `applyProfileFromUser` marks every
+    // field as user-modified, so a successful apply here is naturally one-shot;
+    // this re-checks (rather than latching a ref) so a default profile whose
+    // provider is still loading gets applied once that provider becomes
+    // selectable, instead of being permanently skipped.
     if (initialValues || Object.values(userModified).some(Boolean)) return;
     const defaultProfile = profiles.find((profile) => profile.isDefault) ?? null;
     if (

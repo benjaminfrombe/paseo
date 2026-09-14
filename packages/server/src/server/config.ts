@@ -590,6 +590,7 @@ export type ResolvedDaemonSettings = Pick<
   | "appendSystemPrompt"
   | "terminalProfiles"
   | "agentProfiles"
+  | "planAcceptModeDefaults"
   | "skillSelection"
   | "pluginsEnabled"
   | "plugins"
