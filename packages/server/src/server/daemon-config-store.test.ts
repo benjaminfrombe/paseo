@@ -227,6 +227,28 @@ describe("DaemonConfigStore", () => {
     expect(loadPersistedConfig(paseoHome).daemon?.agentProfiles).toHaveLength(1);
   });
 
+  test("patches and persists the per-provider plan-accept mode defaults", () => {
+    const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
+    tempDirs.push(paseoHome);
+    const store = new DaemonConfigStore(paseoHome, {
+      relay: { enabled: false },
+      mcp: { injectIntoAgents: false },
+      browserTools: { enabled: false },
+      providers: {},
+      metadataGeneration: { providers: [] },
+      autoArchiveAfterMerge: false,
+      enableTerminalAgentHooks: false,
+      appendSystemPrompt: "",
+    });
+
+    store.patch({ planAcceptModeDefaults: { claude: "acceptEdits" } });
+
+    expect(store.get().planAcceptModeDefaults).toEqual({ claude: "acceptEdits" });
+    expect(loadPersistedConfig(paseoHome).daemon?.planAcceptModeDefaults).toEqual({
+      claude: "acceptEdits",
+    });
+  });
+
   test("rolls back config when a field transition fails", async () => {
     const paseoHome = mkdtempSync(path.join(tmpdir(), "paseo-daemon-config-store-"));
     tempDirs.push(paseoHome);

@@ -246,6 +246,8 @@ export const en = {
       implement: "Implement",
       question: "How would you like to proceed?",
       proposedPlan: "Proposed plan",
+      chooseMode: "Choose mode after implementing",
+      modeLabel: "Mode:",
     },
   },
   agentPanel: {
@@ -2953,6 +2955,9 @@ export const en = {
         removeConfirmMessage: 'Remove "{{name}}"?',
         moveUp: "Move up",
         moveDown: "Move down",
+        setDefault: "Set as default for new workspaces",
+        unsetDefault: "Remove as default for new workspaces",
+        defaultBadge: "Default",
       },
       daemon: {
         rename: {
@@ -3076,6 +3081,12 @@ export const en = {
         discovered: "Discovered",
         custom: "Custom models",
         updated: "Updated {{time}}",
+      },
+      planAcceptMode: {
+        sectionTitle: "Plan accept mode",
+        rowTitle: "Default mode after accepting a plan",
+        pickerLabel: "Choose default plan-accept mode",
+        unset: "Not set",
       },
       diagnostic: {
         title: "Diagnostic",

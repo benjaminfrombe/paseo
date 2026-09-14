@@ -252,6 +252,8 @@ export const ja: TranslationResources = {
       implement: "実装",
       question: "どのように続けますか？",
       proposedPlan: "提案されたプラン",
+      chooseMode: "実装後のモードを選択",
+      modeLabel: "モード:",
     },
   },
   agentPanel: {
@@ -2852,6 +2854,9 @@ export const ja: TranslationResources = {
         removeConfirmMessage: '"{{name}}"を削除しますか？',
         moveUp: "上に移動",
         moveDown: "下に移動",
+        setDefault: "新しいワークスペースのデフォルトに設定",
+        unsetDefault: "デフォルトの設定を解除",
+        defaultBadge: "デフォルト",
       },
       daemon: {
         rename: {
@@ -2976,6 +2981,12 @@ export const ja: TranslationResources = {
         discovered: "検出済み",
         custom: "カスタムモデル",
         updated: "{{time}}に更新",
+      },
+      planAcceptMode: {
+        sectionTitle: "プラン承認モード",
+        rowTitle: "プラン承認後のデフォルトモード",
+        pickerLabel: "デフォルトのプラン承認モードを選択",
+        unset: "未設定",
       },
       diagnostic: {
         title: "診断",

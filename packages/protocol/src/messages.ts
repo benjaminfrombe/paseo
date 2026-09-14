@@ -189,6 +189,7 @@ const MutableMetadataGenerationConfigSchema = z
   })
   .passthrough();
 
+
 const MutableBrowserToolsConfigSchema = z
   .object({
     enabled: z.boolean().default(false),
@@ -245,6 +246,7 @@ export const MutableDaemonConfigSchema = z
     appendSystemPrompt: z.string().default(""),
     terminalProfiles: z.array(TerminalProfileSchema).optional(),
     agentProfiles: z.array(AgentProfileSchema).optional(),
+    planAcceptModeDefaults: z.record(z.string(), z.string()).optional(),
     skills: z.object({ selection: AgentSkillSelectionSchema.optional() }).strict().optional(),
     pluginsEnabled: z.boolean().optional(),
     plugins: z.record(PluginIdSchema, PluginSourceSchema).optional(),
@@ -273,6 +275,7 @@ export const MutableDaemonConfigPatchSchema = z
     appendSystemPrompt: z.string().optional(),
     terminalProfiles: z.array(TerminalProfileSchema).optional(),
     agentProfiles: z.array(AgentProfileSchema).optional(),
+    planAcceptModeDefaults: z.record(z.string(), z.string()).optional(),
     pluginsEnabled: z.boolean().optional(),
     plugins: z.record(PluginIdSchema, PluginSourceSchema).optional(),
     features: SpeechSettingsPatchSchema.optional(),
@@ -514,6 +517,7 @@ export const AgentPermissionResponseSchema: z.ZodType<AgentPermissionResponse> =
       selectedActionId: z.string().optional(),
       updatedInput: z.record(z.string(), z.unknown()).optional(),
       updatedPermissions: z.array(AgentPermissionUpdateSchema).optional(),
+      targetModeId: z.string().optional(),
     }),
     z.object({
       behavior: z.literal("deny"),
@@ -3862,6 +3866,8 @@ export const ServerInfoStatusPayloadSchema = z
         agentProfiles: z.boolean().optional(),
         // COMPAT(agentConfigApply): added in v0.3.2, remove gate after 2027-02-11.
         agentConfigApply: z.boolean().optional(),
+        // COMPAT(planAcceptModeSelection): added in v0.8.0, remove gate after 2027-09-14.
+        planAcceptModeSelection: z.boolean().optional(),
       })
       .optional(),
   })

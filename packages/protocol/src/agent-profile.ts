@@ -24,6 +24,8 @@ export const AgentProfileSchema = z
     featureValues: z.record(z.string(), z.unknown()).optional(),
     /** Free text, surfaced to orchestrating agents by the `list_profiles` MCP tool. */
     notes: z.string().optional(),
+    /** Seeds a brand-new workspace draft. At most one profile should carry this. */
+    isDefault: z.boolean().optional(),
   })
   .passthrough();
 
