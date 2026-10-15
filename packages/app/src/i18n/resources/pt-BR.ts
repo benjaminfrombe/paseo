@@ -1179,6 +1179,15 @@ export const ptBR: TranslationResources = {
       done: "Concluído",
     },
     display: {
+      sorting: {
+        projectGroupingOnly: "Somente por projeto",
+        name: "Nome",
+        workspaces: "Ordenar espaços por",
+        projects: "Ordenar projetos por",
+        label: "Ordenar por",
+        recent: "Atividade recente",
+        manual: "Ordem manual",
+      },
       showBackground: "Mostrar espaços em segundo plano",
       trigger: "Preferências de exibição",
       heading: "Exibição",
@@ -2068,6 +2077,17 @@ export const ptBR: TranslationResources = {
     },
   },
   settings: {
+    workspaces: {
+      projectGroupingHint:
+        "Agrupe por Projeto para ativar a ordenação de projetos por atividade. Sua escolha é mantida.",
+      sorting: "Ordenação por atividade",
+      workspaceRunningFirst: "Priorizar agentes ativos nos espaços",
+      projectRunningFirst: "Priorizar agentes ativos nos projetos",
+      runningFirstHint:
+        "Ativado: itens com agentes ativos ficam primeiro e descem ao terminar. Desativado: apenas iniciar um agente faz seu espaço ou projeto subir.",
+      disabledHint:
+        "Selecione Atividade recente em “{{sortLabel}}” para ativar. Ordem atual: {{sortMode}}.",
+    },
     title: "Configurações",
     loading: "Carregando configurações...",
     groups: {
@@ -2088,6 +2108,7 @@ export const ptBR: TranslationResources = {
     },
     groupInfo: "Sobre {{title}}",
     sections: {
+      workspaces: "Espaços de trabalho",
       general: "Geral",
       chat: "Chat",
       appearance: "Aparência",
