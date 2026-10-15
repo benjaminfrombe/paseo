@@ -101,6 +101,7 @@ export const ptBR: TranslationResources = {
       home: "Início",
       groupByProject: "Agrupar por projeto",
       groupByStatus: "Agrupar por status",
+      groupByDay: "Agrupar por dia de atividade",
       modelGroupLabel: "Modelo",
       modelSearchKeywords: "trocar modelo mudar modelo definir modelo selecionar modelo",
       thinkingGroupLabel: "Raciocínio",
@@ -1178,6 +1179,11 @@ export const ptBR: TranslationResources = {
       working: "Em execução",
       done: "Concluído",
     },
+    dayBucket: {
+      today: "Hoje",
+      yesterday: "Ontem",
+      older: "Anterior",
+    },
     display: {
       sorting: {
         projectGroupingOnly: "Somente por projeto",
@@ -1195,6 +1201,7 @@ export const ptBR: TranslationResources = {
         label: "Agrupamento",
         project: "Projeto",
         status: "Status",
+        day: "Dia de atividade",
         labels: "Etiquetas",
       },
       titleSource: {

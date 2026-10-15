@@ -101,6 +101,7 @@ export const fr: TranslationResources = {
       home: "Accueil",
       groupByProject: "Grouper par projet",
       groupByStatus: "Grouper par statut",
+      groupByDay: "Grouper par jour d'activité",
       modelGroupLabel: "Modèle",
       modelSearchKeywords:
         "changer de modèle modifier le modèle définir le modèle sélectionner le modèle model",
@@ -1179,6 +1180,11 @@ export const fr: TranslationResources = {
       working: "En cours",
       done: "Terminé",
     },
+    dayBucket: {
+      today: "Aujourd'hui",
+      yesterday: "Hier",
+      older: "Plus ancien",
+    },
     display: {
       sorting: {
         projectGroupingOnly: "Groupement par projet",
@@ -1196,6 +1202,7 @@ export const fr: TranslationResources = {
         label: "Regroupement",
         project: "Projet",
         status: "Statut",
+        day: "Jour d'activité",
         labels: "Libellés",
       },
       titleSource: {

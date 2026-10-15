@@ -20,7 +20,12 @@ import {
   type SidebarShortcutModel,
   type SidebarShortcutSection,
 } from "@/utils/sidebar-shortcuts";
-import { statusWorkspaceGroups, type SidebarWorkspaceGroup } from "./sidebar-labels";
+import {
+  statusWorkspaceGroups,
+  dayWorkspaceGroups,
+  type SidebarWorkspaceGroup,
+} from "./sidebar-labels";
+import { buildDayGroups } from "@/hooks/sidebar-day-view-model";
 
 export interface SidebarProjection {
   pinnedGroups: PinnedSidebarGroups;
@@ -120,6 +125,14 @@ function buildWorkspaceGroups(
           sortMode: input.sortMode,
           runningFirst: input.workspaceActivityRunningFirst,
           workspaceOrderByStatus: input.workspaceOrderByStatus,
+        }),
+      );
+    case "day":
+      return dayWorkspaceGroups(
+        buildDayGroups({
+          workspaces: unpinnedWorkspaces,
+          runningFirst: input.workspaceActivityRunningFirst,
+          t: input.t,
         }),
       );
   }

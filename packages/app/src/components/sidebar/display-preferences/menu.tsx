@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { View, type PressableStateCallbackType } from "react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
 import {
+  CalendarDays,
   Captions,
   Circle,
   CircleCheck,
@@ -90,6 +91,7 @@ type OptionIcon = ComponentType<{
 const GROUPING_ICONS: Record<SidebarGroupMode, OptionIcon> = {
   project: withUnistyles(Folder),
   status: withUnistyles(CircleDashed),
+  day: withUnistyles(CalendarDays),
 };
 
 const TITLE_SOURCE_ICONS: Record<WorkspaceTitleSource, OptionIcon> = {
@@ -121,7 +123,7 @@ const TRAILING_ICONS: Record<SidebarTrailingChoice, OptionIcon> = {
   timestamp: withUnistyles(Clock),
 };
 
-const GROUPING_MODES: readonly SidebarGroupMode[] = ["project", "status"];
+const GROUPING_MODES: readonly SidebarGroupMode[] = ["project", "status", "day"];
 const SORT_MODES: readonly SidebarSortMode[] = ["manual", "name", "recent"];
 const SORT_ICONS: Record<SidebarSortMode, OptionIcon> = {
   manual: withUnistyles(Folder),
@@ -139,6 +141,7 @@ const TRAILING_CHOICES: readonly SidebarTrailingChoice[] = ["diff", "timestamp"]
 const GROUPING_LABEL_KEYS: Record<SidebarGroupMode, string> = {
   project: "sidebar.display.grouping.project",
   status: "sidebar.display.grouping.status",
+  day: "sidebar.display.grouping.day",
 };
 
 const TITLE_SOURCE_LABEL_KEYS: Record<WorkspaceTitleSource, string> = {
