@@ -27,10 +27,16 @@ export function WorkspacesSection() {
       <SettingsCard>
         <SettingsSwitch
           label={t("settings.workspaces.workspaceRunningFirst")}
-          hint={hint(sortMode, t("sidebar.display.sorting.workspaces"))}
+          hint={
+            groupMode === "day"
+              ? t("settings.workspaces.runningFirstHint")
+              : hint(sortMode, t("sidebar.display.sorting.workspaces"))
+          }
           value={workspaceRunningFirst}
           onValueChange={setWorkspaceRunningFirst}
-          disabled={sortMode !== "recent"}
+          // Day groups always order by activity, so the running-first preference applies even
+          // while the stored workspace sort mode is Manual or Name — it must stay settable.
+          disabled={sortMode !== "recent" && groupMode !== "day"}
           testID="settings-workspaces-workspace-running"
         />
         <SettingsSwitch

@@ -18,6 +18,7 @@ import { useSidebarOrderStore } from "@/stores/sidebar-order-store";
 import { applyStoredOrdering, sortSidebarProjects } from "@/hooks/sidebar-workspaces-view-model";
 import type { SidebarShortcutModel } from "@/utils/sidebar-shortcuts";
 import { buildSidebarProjection } from "./sidebar-projection";
+import { useSidebarDayRolloverTick } from "@/hooks/sidebar-day-view-model";
 import type { SidebarProjectIconTarget } from "@/utils/sidebar-project-row-model";
 import { filterWorkspacesByLabels, type SidebarWorkspaceGroup } from "./sidebar-labels";
 import { filterWorkspacesByProjects, resolveActiveProjectFilters } from "./sidebar-project-filter";
@@ -82,6 +83,7 @@ export function SidebarModelProvider({
     (state) => state.collapsedWorkspaceGroupKeys,
   );
   const pinnedCollapsed = useSidebarCollapsedSectionsStore((state) => state.collapsedPinned);
+  const dayTick = useSidebarDayRolloverTick(groupMode === "day");
   const pinnedWorkspaceOrder = useSidebarOrderStore((state) => state.pinnedWorkspaceOrder);
   const toggleProjectCollapsed = useSidebarCollapsedSectionsStore(
     (state) => state.toggleProjectCollapsed,
@@ -200,10 +202,14 @@ export function SidebarModelProvider({
       collapsedProjectKeys,
       collapsedWorkspaceGroupKeys,
       t,
+      // Bumping the tick on local midnight and on foreground-return re-buckets the day groups
+      // of an idle sidebar that stayed open overnight; it is a no-op in every other mode.
+      dayTick,
     }),
     [
       collapsedProjectKeys,
       collapsedWorkspaceGroupKeys,
+      dayTick,
       groupMode,
       sortMode,
       workspaceActivityRunningFirst,

@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import type { TFunction } from "i18next";
+import { isWeb } from "@/constants/platform";
 import {
   compareSidebarActivity,
   type SidebarWorkspaceEntry,
@@ -35,6 +37,17 @@ function startOfLocalDay(date: Date): Date {
 }
 
 /**
+ * Local midnight `offset` days back, built by moving the calendar date rather than subtracting
+ * 24-hour blocks — across a daylight-saving transition, subtracting DAY_MS would put the
+ * boundary at 01:00 and shift a workspace worked at 00:30 into the wrong bucket.
+ */
+function localMidnightDaysBefore(todayStart: number, offset: number): number {
+  const day = startOfLocalDay(new Date(todayStart));
+  day.setDate(day.getDate() - offset);
+  return day.getTime();
+}
+
+/**
  * The sidebar's day buckets, newest first: Today, Yesterday, then the previous five days as
  * `dd-mm`, then Older. Rows inside a bucket keep the recent-activity order, and the running-
  * first preference applies exactly as it does in the flat recent sort.
@@ -53,12 +66,11 @@ export function buildDayGroups(input: {
   const { workspaces, runningFirst = false, t, now = new Date() } = input;
 
   const todayStart = startOfLocalDay(now).getTime();
-  const DAY_MS = 24 * 60 * 60 * 1000;
   // Index 0 is today, 1 yesterday, then the five dated buckets, then Older. The bounds array
   // needs one extra entry beyond the last dated bucket for the Older comparison to work.
   const bounds: number[] = [];
   for (let index = 0; index <= DATED_BUCKET_COUNT + 2; index += 1) {
-    bounds.push(todayStart - index * DAY_MS);
+    bounds.push(localMidnightDaysBefore(todayStart, index));
   }
 
   const buckets = new Map<DayBucketKey, SidebarWorkspaceEntry[]>();
@@ -109,4 +121,45 @@ function dayGroupLabel(key: DayBucketKey, bound: number, t: TFunction): string {
     return t(DAY_LABEL_KEYS[key]);
   }
   return dateLabelFormatter.format(new Date(bound));
+}
+
+/**
+ * Bumps once per local midnight and once whenever the app returns to the foreground, so an
+ * idle sidebar left open overnight re-buckets its day groups instead of keeping yesterday's
+ * activity under Today. The tick value itself carries no meaning; changing it is the signal.
+ */
+export function useSidebarDayRolloverTick(enabled: boolean): number {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!enabled) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      const now = new Date();
+      const nextMidnight = startOfLocalDay(now);
+      nextMidnight.setDate(nextMidnight.getDate() + 1);
+      timer = setTimeout(
+        () => {
+          setTick((value) => value + 1);
+          schedule();
+        },
+        nextMidnight.getTime() - now.getTime() + 1000,
+      );
+    };
+    schedule();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        setTick((value) => value + 1);
+      }
+    };
+    if (isWeb) {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (isWeb) {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
+    };
+  }, [enabled]);
+  return tick;
 }

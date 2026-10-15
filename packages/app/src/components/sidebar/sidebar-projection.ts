@@ -52,6 +52,11 @@ export interface SidebarProjectionInput {
   groupMode: SidebarGroupMode;
   sortMode?: SidebarSortMode;
   workspaceActivityRunningFirst?: boolean;
+  /**
+   * Rollover signal from `useSidebarDayRolloverTick`. Only read as a memo dependency; the
+   * projection itself never looks at the value.
+   */
+  dayTick?: number;
   pinnedCollapsed: boolean;
   collapsedProjectKeys: ReadonlySet<string>;
   collapsedWorkspaceGroupKeys: ReadonlySet<string>;
