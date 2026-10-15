@@ -23,10 +23,14 @@ const DAY_LABEL_KEYS = {
   older: "sidebar.dayBucket.older",
 } as const;
 
-/** `dd-mm`, the same shape the user reads on a calendar header, and stable across locales. */
+/**
+ * Locale-aware short date ("13 okt" / "Oct 13"): the bucket headers sit under translated
+ * Today/Yesterday labels, so a fixed `dd-mm` would be the one unlocalized string in the group
+ * and would read ambiguously in day-first locales such as en-US.
+ */
 const dateLabelFormatter = new Intl.DateTimeFormat(undefined, {
-  day: "2-digit",
-  month: "2-digit",
+  day: "numeric",
+  month: "short",
 });
 
 /** Local midnight of `date`, so a workspace worked on late yesterday never lands in Today. */
