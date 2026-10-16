@@ -66,6 +66,14 @@ import {
   type MessageInputRef,
 } from "./input/input";
 import type { ImageAttachment, MessagePayload, TextReplacement } from "./types";
+import {
+  readRecallHistory,
+  rememberSentPrompt,
+  resolveRecall,
+  resolveRecallDirection,
+  shouldRestoreStash,
+  type RecallSession,
+} from "./message-recall";
 import { ICON_SIZE, type Theme } from "@/styles/theme";
 import type { DraftCommandTarget } from "@/hooks/use-agent-commands-query";
 import { encodeImages } from "@/utils/encode-images";
@@ -1455,6 +1463,26 @@ function ComposerContentImpl({
     },
     [blurOnSubmit, clearDraft, replaceUserInput, resetSuppression, setSelectedAttachments],
   );
+  // The Up/Down walk through sent messages, absent while the user is on their own text.
+  const recallSessionRef = useRef<RecallSession | null>(null);
+  // The committed draft and the writer that owns it, captured after the commit so a walk that is
+  // abandoned reads the composer it is leaving rather than the one it is switching to. Reading
+  // the writer from here also keeps the walk alive when the prop's identity changes.
+  const committedDraftRef = useRef({ text: textSource.getSnapshot(), write: onChangeText });
+  useEffect(() => {
+    committedDraftRef.current = { text: textSource.getSnapshot(), write: onChangeText };
+  });
+  // A walk left behind — the agent changed, the tab closed — would persist the recalled message
+  // over what the user was writing, so the stash goes back on the way out.
+  useEffect(() => {
+    return () => {
+      const committed = committedDraftRef.current;
+      const abandoned = { session: recallSessionRef.current, draftText: committed.text };
+      recallSessionRef.current = null;
+      if (!shouldRestoreStash(abandoned)) return;
+      committed.write(abandoned.session.stash.text);
+    };
+  }, [agentId]);
 
   const { pickImages } = useImageAttachmentPicker();
   const { pickFiles } = useFilePicker();
@@ -1619,6 +1647,8 @@ function ComposerContentImpl({
       });
       if (!result.queued) return;
 
+      // Queued or sent, the user committed the text, so recall can reach it.
+      rememberSentPrompt({ serverId, agentId, text: queuedMessage });
       replaceUserInput("");
       setSelectedAttachments([]);
       resetSuppression();
@@ -1629,6 +1659,7 @@ function ComposerContentImpl({
       clearSentAttachments,
       queueWriter,
       resetSuppression,
+      serverId,
       setSelectedAttachments,
       replaceUserInput,
     ],
@@ -1672,12 +1703,16 @@ function ComposerContentImpl({
         },
         failedToSendMessage: t("composer.errors.failedToSend"),
       });
+      if (result === "submitted") {
+        rememberSentPrompt({ serverId, agentId, text: outgoingMessage });
+      }
       completeSubmit({
         result,
         outgoingAttachments,
       });
     },
     [
+      agentId,
       allowEmptySubmit,
       beginSubmit,
       clearDraft,
@@ -1685,6 +1720,7 @@ function ComposerContentImpl({
       hasExternalContent,
       isAgentRunning,
       queueMessage,
+      serverId,
       setSelectedAttachments,
       replaceUserInput,
       submitBehavior,
@@ -1976,10 +2012,34 @@ function ComposerContentImpl({
 
   const hasSendableContent = hasText || selectedAttachments.length > 0;
 
-  // Handle keyboard navigation for command autocomplete.
+  // Handle keyboard navigation for command autocomplete, then message recall. Autocomplete owns
+  // the arrow keys while its menu is open, so recall only ever sees the keys it declined.
   const handleCommandKeyPress = useCallback(
-    (event: ComposerKeyPressEvent) => autocompleteRef.current?.onKeyPress(event) ?? false,
-    [],
+    (event: ComposerKeyPressEvent) => {
+      if (autocompleteRef.current?.onKeyPress(event)) return true;
+
+      const direction = resolveRecallDirection(event);
+      if (!direction) return false;
+      // Read the sources on the key press instead of subscribing to them: the stream changes on
+      // every chunk of a running turn, and the composer must not re-render with it.
+      const outcome = resolveRecall({
+        history: readRecallHistory({
+          serverId,
+          agentId,
+          timeline: useSessionStore.getState().sessions[serverId]?.agentStreamTail.get(agentId),
+        }),
+        session: recallSessionRef.current,
+        snapshot: event.input,
+        direction,
+      });
+      if (!outcome) return false;
+
+      recallSessionRef.current = outcome.session;
+      event.preventDefault();
+      replaceUserInput(outcome.text, outcome.selection);
+      return true;
+    },
+    [agentId, replaceUserInput, serverId],
   );
 
   const cancelButtonStyle = useMemo(
