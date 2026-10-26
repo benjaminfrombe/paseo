@@ -13,9 +13,7 @@ import {
   buildDraftAgentControls,
   hasDraftContent,
   resolveDraftKey,
-  resolveDraftSelectionSource,
   type DraftKeyInput,
-  type DraftSelectionSourceFlags,
 } from "@/composer/draft/input-draft-core";
 import {
   buildDraftCommandTarget,
@@ -25,6 +23,10 @@ import {
   type ProviderSelectionState,
 } from "@/provider-selection/provider-selection";
 import { useDraftStore } from "@/stores/draft-store";
+import {
+  resolveDraftSelectionSource as __privateSelectionSource,
+  type DraftSelectionSourceFlags,
+} from "@/composer/draft/selection-source";
 import { AfterPaintPublication } from "@/composer/after-paint-publication";
 import { useShallow } from "zustand/shallow";
 import type { ComposerTextSource } from "@/composer/text-source";
@@ -328,10 +330,7 @@ export function useAgentInputDraft(input: UseAgentInputDraftInput): AgentInputDr
       effectiveModeId,
       effectiveModelId,
       effectiveThinkingOptionId,
-      selectionSource: resolveDraftSelectionSource({
-        userModified: formState.userModified,
-        initialValues: composerOptions.initialValues,
-      }),
+      selectionSource: formState.selectionSource,
       featureValues: draftFeatureValues,
       agentControls: buildDraftAgentControls({
         formState,
@@ -374,7 +373,7 @@ export const __private__ = {
   resolveEffectiveComposerModeId,
   resolveEffectiveComposerModelId,
   resolveEffectiveComposerThinkingOptionId,
-  resolveDraftSelectionSource,
+  resolveDraftSelectionSource: __privateSelectionSource,
   buildDraftCommandTarget,
   buildDraftAgentControls,
 };
