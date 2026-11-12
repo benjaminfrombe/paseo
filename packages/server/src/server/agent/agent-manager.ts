@@ -244,9 +244,6 @@ function buildStoredAgentConfig(record: StoredAgentRecord): AgentSessionConfig {
     return config;
   }
   if (record.config.model != null) config.model = record.config.model;
-  if (record.config.selectionSource != null) {
-    config.selectionSource = record.config.selectionSource;
-  }
   if (record.config.thinkingOptionId != null) {
     config.thinkingOptionId = record.config.thinkingOptionId;
   }
@@ -5978,15 +5975,9 @@ export class AgentManager {
       normalized.model = trimmed.length > 0 && trimmed !== "default" ? trimmed : undefined;
     }
 
-    // An implicit selection means the caller deliberately omitted the model so
-    // the provider's own configured default applies (issue #623). The provider
-    // catalog is still consulted, but only an explicitly flagged default model
-    // is recorded; without one the provider resolves its own default at launch.
-    if ((options.resolveDefaultModel ?? true) && !normalized.model) {
-      const requireExplicitDefault = normalized.selectionSource === "implicit";
-      const defaultModelId = await this.resolveDefaultModelId(normalized, {
-        requireExplicitDefault,
-      });
+    const shouldResolveDefaultModel = options.resolveDefaultModel ?? true;
+    if (shouldResolveDefaultModel && !normalized.model) {
+      const defaultModelId = await this.resolveDefaultModelId(normalized);
       if (defaultModelId) {
         normalized.model = defaultModelId;
       }
@@ -6020,10 +6011,7 @@ export class AgentManager {
     }
   }
 
-  private async resolveDefaultModelId(
-    config: AgentSessionConfig,
-    options: { requireExplicitDefault?: boolean } = {},
-  ): Promise<string | undefined> {
+  private async resolveDefaultModelId(config: AgentSessionConfig): Promise<string | undefined> {
     const client = this.clients.get(config.provider);
     if (!client) {
       return undefined;
@@ -6034,14 +6022,7 @@ export class AgentManager {
         cwd: config.cwd,
         force: false,
       });
-      const explicitDefault = catalog.models.find((model) => model.isDefault);
-      if (explicitDefault) {
-        return explicitDefault.id;
-      }
-      if (options.requireExplicitDefault) {
-        return undefined;
-      }
-      return catalog.models[0]?.id;
+      return (catalog.models.find((model) => model.isDefault) ?? catalog.models[0])?.id;
     } catch {
       // Provider may not support model listing — leave model undefined.
       return undefined;
