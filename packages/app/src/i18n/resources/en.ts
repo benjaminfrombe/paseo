@@ -3186,6 +3186,9 @@ export const en = {
         discovered: "Discovered",
         custom: "Custom models",
         updated: "Updated {{time}}",
+        setDefault: "Set as default for new sessions",
+        clearDefault: "Clear default (use the provider's own default)",
+        defaultBadge: "Default",
       },
       diagnostic: {
         title: "Diagnostic",

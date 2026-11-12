@@ -1,5 +1,5 @@
 import * as Clipboard from "expo-clipboard";
-import { AlertTriangle, Copy, FileText, Plus, RotateCw, Trash2 } from "lucide-react-native";
+import { AlertTriangle, Copy, FileText, Pin, Plus, RotateCw, Trash2 } from "lucide-react-native";
 import type { TFunction } from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,7 @@ import { useDaemonConfig } from "@/hooks/use-daemon-config";
 import { useProvidersSnapshot } from "@/hooks/use-providers-snapshot";
 import { useTimeAgo } from "@/hooks/use-time-ago";
 import { useHostRuntimeClient } from "@/runtime/host-runtime";
+import { mergeProviderPreferences, useFormPreferences } from "@/hooks/use-form-preferences";
 import { settingsStyles } from "@/styles/settings";
 import { resolveProviderLabel } from "@/utils/provider-definitions";
 import { compareMatchScores, scoreTextFields } from "@getpaseo/protocol/search/text-match";
@@ -49,11 +50,53 @@ function rankModels<T>(items: T[], query: string, fields: (item: T) => string[])
   return scored.map((entry) => entry.item);
 }
 
-function DiscoveredModelRow({ model }: { model: AgentModelDefinition }) {
+function DiscoveredModelRow({
+  model,
+  isDefault,
+  onToggleDefault,
+}: {
+  model: AgentModelDefinition;
+  isDefault: boolean;
+  onToggleDefault?: (modelId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const { theme } = useUnistyles();
+  const handlePress = useCallback(() => onToggleDefault?.(model.id), [model.id, onToggleDefault]);
+  const buttonStyle = useCallback(
+    ({ hovered, pressed }: PressableStateCallbackType & { hovered?: boolean }) => [
+      sheetStyles.defaultStarButton,
+      (Boolean(hovered) || pressed) && sheetStyles.iconButtonHovered,
+    ],
+    [],
+  );
   return (
     <View style={sheetStyles.modelRow}>
+      <Pressable
+        onPress={handlePress}
+        hitSlop={8}
+        style={buttonStyle}
+        accessibilityRole="button"
+        accessibilityLabel={
+          isDefault
+            ? t("settings.providers.models.clearDefault")
+            : t("settings.providers.models.setDefault")
+        }
+        testID={`provider-model-default-${model.id}`}
+      >
+        <Pin
+          size={theme.iconSize.sm}
+          color={isDefault ? theme.colors.foreground : theme.colors.foregroundMuted}
+          fill={isDefault ? theme.colors.foregroundMuted : "none"}
+        />
+      </Pressable>
       <Text style={sheetStyles.modelTitle} numberOfLines={1}>
         {model.label}
+        {isDefault ? (
+          <Text style={sheetStyles.defaultBadgeText}>
+            {" "}
+            {t("settings.providers.models.defaultBadge")}
+          </Text>
+        ) : null}
       </Text>
       <Text
         style={sheetStyles.monoHint}
@@ -405,6 +448,8 @@ interface ProviderModalBodyProps {
   deletingModelId: string | null;
   onRefresh: () => void;
   onDeleteCustom: (modelId: string) => void;
+  defaultModelId: string | null;
+  onToggleDefault: (modelId: string) => void;
   theme: { iconSize: { md: number }; colors: { foregroundMuted: string } };
 }
 
@@ -496,6 +541,8 @@ function ProviderModalBody(props: ProviderModalBodyProps) {
     deletingModelId,
     onRefresh,
     onDeleteCustom,
+    defaultModelId,
+    onToggleDefault,
     theme,
   } = props;
 
@@ -544,7 +591,12 @@ function ProviderModalBody(props: ProviderModalBodyProps) {
           />
           <View style={settingsStyles.card}>
             {filteredDiscovered.map((model) => (
-              <DiscoveredModelRow key={model.id} model={model} />
+              <DiscoveredModelRow
+                key={model.id}
+                model={model}
+                isDefault={model.id === defaultModelId}
+                onToggleDefault={onToggleDefault}
+              />
             ))}
           </View>
         </View>
@@ -582,10 +634,33 @@ export function ProviderDiagnosticSheet({
   const isCompact = useIsCompactFormFactor();
   const { entries: snapshotEntries, refresh, isRefreshing } = useProvidersSnapshot(serverId);
   const { config, patchConfig } = useDaemonConfig(serverId);
+  const { preferences, updatePreferences } = useFormPreferences();
   const [query, setQuery] = useState("");
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [diagSheetOpen, setDiagSheetOpen] = useState(false);
   const [deletingModelId, setDeletingModelId] = useState<string | null>(null);
+
+  const defaultModelId = useMemo(
+    () => preferences.providerPreferences?.[provider]?.model ?? null,
+    [preferences, provider],
+  );
+  const handleToggleDefaultModel = useCallback(
+    async (modelId: string) => {
+      try {
+        const alreadyDefault = preferences.providerPreferences?.[provider]?.model === modelId;
+        await updatePreferences((current) =>
+          mergeProviderPreferences({
+            preferences: current,
+            provider: provider as AgentProvider,
+            updates: { model: alreadyDefault ? null : modelId },
+          }),
+        );
+      } catch (error) {
+        console.warn("[ProviderDiagnosticSheet] toggle default model failed", error);
+      }
+    },
+    [preferences, provider, updatePreferences],
+  );
 
   const providerLabel = resolveProviderLabel(provider, snapshotEntries);
   const providerEntry = useMemo(
@@ -701,6 +776,8 @@ export function ProviderDiagnosticSheet({
           deletingModelId={deletingModelId}
           onRefresh={handleRefreshModels}
           onDeleteCustom={handleDeleteCustom}
+          defaultModelId={defaultModelId}
+          onToggleDefault={handleToggleDefaultModel}
           theme={theme}
         />
       </AdaptiveModalSheet>
@@ -786,6 +863,13 @@ const sheetStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: theme.spacing[1],
   },
+  defaultStarButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 24,
+    height: 24,
+    borderRadius: theme.borderRadius.full,
+  },
   modelRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -806,6 +890,10 @@ const sheetStyles = StyleSheet.create((theme) => ({
   },
   modelRowFiller: {
     flex: 1,
+  },
+  defaultBadgeText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.foregroundMuted,
   },
   emptyState: {
     paddingVertical: theme.spacing[8],
